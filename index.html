@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16191C">
+<title>Jetpack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ===== Colors: change these to restyle the whole page ===== */
+  :root {
+    color-scheme: dark;
+    --bg: #16191C;
+    --plate: #22272C;
+    --plate-edge: #3A424A;
+    --text: #DCE1E6;
+    --muted: #8C969F;
+    --amber: #FFB547;
+    --amber-dim: #6B4A16;
+    --cyan: #5FD4E8;
+    --red: #FF5A4E;
+    --off-seg: #2F363D;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Barlow", "Segoe UI", system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.45;
+    min-height: 100vh;
+  }
+  main { max-width: 26rem; margin: 0 auto; padding: 1rem 1rem 2rem; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 0.75rem; padding: 0.5rem 0 0.9rem;
+  }
+  .brand { display: flex; align-items: center; gap: 0.7rem; }
+  .brand svg { width: 2.6rem; height: 2.6rem; flex: none; }
+  h1 {
+    font-family: "Chakra Petch", "Segoe UI", sans-serif;
+    font-weight: 600; font-size: 1.9rem; line-height: 1; margin: 0;
+    letter-spacing: 0.03em;
+  }
+  .hazard {
+    height: 6px; border-radius: 3px; margin-bottom: 1rem;
+    background: repeating-linear-gradient(135deg, var(--amber) 0 10px, var(--bg) 10px 20px);
+    opacity: 0.85;
+  }
+  .status {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    font-size: 0.95rem; color: var(--muted); white-space: nowrap;
+  }
+  .status .dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--plate-edge); }
+  .status.on .dot { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .status.busy .dot { background: var(--amber); }
+
+  .plate {
+    background: var(--plate);
+    border: 1px solid var(--plate-edge);
+    border-radius: 6px 18px 6px 18px;
+    padding: 1.1rem 1.1rem 1.2rem;
+    margin-bottom: 0.9rem;
+  }
+  h2 {
+    font-family: "Chakra Petch", sans-serif;
+    font-weight: 500; font-size: 1.05rem; color: var(--muted);
+    margin: 0 0 0.6rem;
+  }
+
+  /* Power: the one bold element */
+  .power-wrap { display: grid; justify-items: center; gap: 0.8rem; padding: 0.4rem 0 0.2rem; }
+  #power {
+    position: relative;
+    width: 11.5rem; height: 11.5rem; border-radius: 50%;
+    border: 3px solid var(--plate-edge);
+    background: radial-gradient(circle at 50% 40%, #2C3238, #1A1E22 70%);
+    color: var(--muted);
+    font-family: "Chakra Petch", sans-serif; font-weight: 600; font-size: 2.1rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 10px #1A1E22, inset 0 0 0 12px var(--plate-edge);
+    transition: color 160ms, border-color 160ms, box-shadow 220ms;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #power:active { transform: scale(0.97); }
+  #power[aria-pressed="true"] {
+    color: var(--amber);
+    border-color: var(--amber);
+    box-shadow: inset 0 0 0 10px #1A1E22, inset 0 0 0 12px var(--amber),
+                0 0 28px rgba(255, 181, 71, 0.35), inset 0 0 40px rgba(255, 181, 71, 0.18);
+    text-shadow: 0 0 12px rgba(255, 181, 71, 0.7);
+  }
+  #power:disabled { opacity: 0.4; cursor: not-allowed; }
+  .note { margin: 0; color: var(--muted); font-size: 0.95rem; text-align: center; }
+
+  /* Battery dial */
+  .dial { display: block; width: 100%; max-width: 17rem; margin: 0 auto; }
+  .dial-readout { text-align: center; margin-top: -2.6rem; }
+  #battText {
+    display: block; font-family: "Chakra Petch", sans-serif;
+    font-weight: 600; font-size: 1.5rem; line-height: 1.1;
+  }
+  #battVolts { color: var(--muted); font-size: 0.95rem; }
+
+  button.action {
+    font: inherit; font-weight: 500;
+    width: 100%; min-height: 3rem; margin-top: 1rem;
+    border-radius: 4px 12px 4px 12px;
+    border: 1px solid var(--plate-edge);
+    background: #1A1E22; color: var(--text);
+    cursor: pointer;
+  }
+  button.action:active { border-color: var(--cyan); }
+  #connectBtn { margin-top: 0; }
+  button.connect { background: var(--amber); color: #2A1C05;
+    border-color: var(--amber); font-weight: 500;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+  #message { min-height: 1.4rem; margin: 0.7rem 0 0; color: var(--muted); font-size: 0.95rem; }
+  #message.error { color: var(--red); }
+
+  details { color: var(--muted); font-size: 0.95rem; }
+  summary {
+    cursor: pointer; color: var(--text); font-weight: 500;
+    min-height: 2.4rem; display: flex; align-items: center;
+  }
+  details p { margin: 0.2rem 0 0; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="22" fill="#22272C" stroke="#FFB547" stroke-width="2"/>
+        <path d="M17 12 h14 l-3 14 h-8 z" fill="#3A424A" stroke="#DCE1E6" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M20 28 q4 12 4 12 q0 0 4 -12 z" fill="#FFB547"/>
+        <path d="M22.5 28 q1.5 6 1.5 6 q0 0 1.5 -6 z" fill="#FFF1D6"/>
+      </svg>
+      <h1>Jetpack</h1>
+    </div>
+    <span class="status" id="status"><span class="dot"></span><span id="statusText">Offline</span></span>
+  </header>
+  <div class="hazard" aria-hidden="true"></div>
+
+  <section class="plate">
+    <button class="action connect" id="connectBtn">Connect to jetpack</button>
+    <p id="message">Switch the jetpack on, then tap Connect.</p>
+  </section>
+
+  <section class="plate">
+    <div class="power-wrap">
+      <button id="power" aria-pressed="false" disabled>OFF</button>
+      <p class="note" id="powerNote">Connect first to use the lights.</p>
+    </div>
+  </section>
+
+  <section class="plate">
+    <h2>Fuel cell</h2>
+    <svg class="dial" id="dial" viewBox="0 0 200 112" aria-hidden="true"></svg>
+    <div class="dial-readout">
+      <span id="battText">No reading</span>
+      <span id="battVolts">Connect to check</span>
+    </div>
+    <button class="action" id="battBtn" disabled>Check battery</button>
+  </section>
+
+  <section class="plate">
+    <details>
+      <summary>Wireless code updates</summary>
+      <p>Puts the jetpack on WiFi for 10 minutes so you can upload new code from the Arduino IDE.</p>
+      <button class="action" id="otaBtn" disabled>Start update mode</button>
+    </details>
+  </section>
+</main>
+
+<script>
+  const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+  const CHAR_UUID    = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+  const DEVICE_NAME  = "BOBAJETPACK";
+
+  // Measured voltages (same scale as the board's code)
+  const EMPTY_V = 3.25;
+  const FULL_V  = 3.95;
+
+  let device = null;
+  let characteristic = null;
+  let lightsOn = false;
+  let battTimer = null;
+  let queue = Promise.resolve();
+
+  const $ = (id) => document.getElementById(id);
+  const connectBtn = $("connectBtn"), powerBtn = $("power"), battBtn = $("battBtn"), otaBtn = $("otaBtn");
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  // Build the battery dial: 10 arc segments across the top half
+  const SEGMENTS = 10, CX = 100, CY = 100, R = 80, GAP = 3;
+  const segs = [];
+  for (let i = 0; i < SEGMENTS; i++) {
+    const a1 = 180 + i * (180 / SEGMENTS) + GAP / 2;
+    const a2 = 180 + (i + 1) * (180 / SEGMENTS) - GAP / 2;
+    const p = (a) => [CX + R * Math.cos(a * Math.PI / 180), CY + R * Math.sin(a * Math.PI / 180)];
+    const [x1, y1] = p(a1), [x2, y2] = p(a2);
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${R} ${R} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke-width", "16");
+    path.setAttribute("stroke", css("--off-seg"));
+    $("dial").appendChild(path);
+    segs.push(path);
+  }
+
+  function say(text, isError = false) {
+    $("message").textContent = text;
+    $("message").classList.toggle("error", isError);
+  }
+
+  function setStatus(state) {
+    const s = $("status");
+    s.classList.toggle("on", state === "on");
+    s.classList.toggle("busy", state === "busy");
+    $("statusText").textContent = state === "on" ? "Linked" : state === "busy" ? "Linking" : "Offline";
+    const ready = state === "on";
+    powerBtn.disabled = !ready;
+    battBtn.disabled = !ready;
+    otaBtn.disabled = !ready;
+    connectBtn.textContent = ready ? "Disconnect" : (device ? "Reconnect" : "Connect to jetpack");
+    connectBtn.classList.toggle("connect", !ready);
+    $("powerNote").textContent = ready
+      ? (lightsOn ? "Lights are running. Tap to turn off." : "Tap to start the lights.")
+      : "Connect first to use the lights.";
+  }
+
+  // One Bluetooth operation at a time
+  function run(task) {
+    queue = queue.then(task, task);
+    return queue;
+  }
+
+  function send(cmd) {
+    return run(() => characteristic.writeValueWithResponse(new TextEncoder().encode(cmd)));
+  }
+
+  async function connect() {
+    if (!navigator.bluetooth) {
+      say("This browser can't use Bluetooth. Open this page in Chrome on Android.", true);
+      return;
+    }
+    try {
+      setStatus("busy");
+      if (!device) {
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ name: DEVICE_NAME }],
+          optionalServices: [SERVICE_UUID]
+        });
+        device.addEventListener("gattserverdisconnected", onDisconnected);
+      }
+      say("Connecting...");
+      const server = await device.gatt.connect();
+      const service = await server.getPrimaryService(SERVICE_UUID);
+      characteristic = await service.getCharacteristic(CHAR_UUID);
+      setStatus("on");
+      say("Connected.");
+      checkBattery();
+      clearInterval(battTimer);
+      battTimer = setInterval(checkBattery, 60000);
+    } catch (err) {
+      setStatus("off");
+      if (err.name === "NotFoundError") {
+        say("No jetpack picked. Make sure it's switched on and nearby, then try again.", true);
+      } else {
+        say("Couldn't connect: " + err.message + ". Turn Bluetooth and Location on, then try again.", true);
+      }
+    }
+  }
+
+  function onDisconnected() {
+    characteristic = null;
+    clearInterval(battTimer);
+    setStatus("off");
+    say("Jetpack disconnected. Tap Reconnect.");
+  }
+
+  connectBtn.addEventListener("click", () => {
+    if (device && device.gatt.connected) device.gatt.disconnect();
+    else connect();
+  });
+
+  powerBtn.addEventListener("click", async () => {
+    const next = !lightsOn;
+    try {
+      await send(next ? "1" : "0");
+      lightsOn = next;
+      powerBtn.setAttribute("aria-pressed", String(lightsOn));
+      powerBtn.textContent = lightsOn ? "ON" : "OFF";
+      setStatus("on");
+    } catch (err) {
+      say("Couldn't reach the jetpack: " + err.message, true);
+    }
+  });
+
+  async function checkBattery() {
+    if (!characteristic) return;
+    try {
+      battBtn.disabled = true;
+      await send("3");
+      await new Promise((r) => setTimeout(r, 400));   // give the board time to measure
+      const value = await run(() => characteristic.readValue());
+      showBattery(new TextDecoder().decode(value));
+    } catch (err) {
+      say("Couldn't read the battery: " + err.message, true);
+    } finally {
+      battBtn.disabled = !characteristic;
+    }
+  }
+
+  function showBattery(text) {
+    // Expected format from the board: "3.82 V - Good"
+    const match = text.match(/([\d.]+)\s*V\s*-\s*(.+)/);
+    if (!match) {
+      $("battText").textContent = "No reading";
+      $("battVolts").textContent = "Tap Check battery";
+      return;
+    }
+    const volts = parseFloat(match[1]);
+    const label = match[2].trim();
+    const usb = label.toLowerCase().includes("usb");
+    let pct = usb ? 100 : Math.round(((volts - EMPTY_V) / (FULL_V - EMPTY_V)) * 100);
+    pct = Math.max(0, Math.min(100, pct));
+    const lit = Math.round(pct / 10);
+    const color = usb ? css("--cyan") : pct <= 20 ? css("--red") : css("--amber");
+
+    $("battText").textContent = usb ? "Charging" : label;
+    $("battVolts").textContent = volts.toFixed(2) + " V";
+    segs.forEach((seg, i) => seg.setAttribute("stroke", i < lit ? color : css("--off-seg")));
+  }
+
+  battBtn.addEventListener("click", checkBattery);
+
+  otaBtn.addEventListener("click", async () => {
+    try {
+      await send("2");
+      say("Update mode started. In Arduino, pick the bobajetpack network port within 10 minutes.");
+    } catch (err) {
+      say("Couldn't start update mode: " + err.message, true);
+    }
+  });
+
+  if (!navigator.bluetooth) {
+    say("This browser can't use Bluetooth. Open this page in Chrome on Android.", true);
+    connectBtn.disabled = true;
+  }
+</script>
+</body>
+</html>
